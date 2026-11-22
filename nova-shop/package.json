@@ -1,0 +1,27 @@
+{
+  "name": "nova-shop",
+  "version": "1.0.0",
+  "description": "A responsive demo e-commerce website built with HTML, CSS, and JavaScript.",
+  "scripts": {
+    "test": "tsc --noEmit",
+    "dev": "next dev",
+    "build": "prisma generate && next build --webpack",
+    "start": "next start"
+  },
+  "private": true,
+  "dependencies": {
+    "@prisma/adapter-pg": "^6.19.3",
+    "@prisma/client": "6.19.3",
+    "next": "^16.2.0",
+    "pg": "^8.23.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "prisma": "6.19.3",
+    "typescript": "^5.9.0"
+  }
+}
