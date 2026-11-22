@@ -9,7 +9,78 @@ const products=[
 {id:8,name:'Classic White Sneakers',category:'Clothing',price:3299,tag:'BESTSELLER',image:'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=700&q=80'}
 ];
 const money=n=>'₹'+n.toLocaleString('en-IN');let category='All';let cart;try{cart=JSON.parse(localStorage.getItem('noir-cart'))||{}}catch{cart={}};const $=s=>document.querySelector(s);const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function renderProducts(){let term=$('#search').value.toLowerCase();let items=products.filter(p=>(category==='All'||p.category===category)&&p.name.toLowerCase().includes(term));let sort=$('#sort').value;if(sort==='low')items.sort((a,b)=>a.price-b.price);if(sort==='high')items.sort((a,b)=>b.price-a.price);$('#products').innerHTML=items.map(p=>`<article class="product"><div class="product-image"><img src="${p.image}" alt="${escapeHTML(p.name)}" loading="lazy">${p.tag?`<span class="tag">${p.tag}</span>`:''}<button class="add" data-add="${p.id}" aria-label="Add ${escapeHTML(p.name)} to bag">Add to bag +</button></div><div class="product-meta"><div><h3>${escapeHTML(p.name)}</h3><small>${p.category}</small></div><strong>${money(p.price)}</strong></div></article>`).join('');$('#empty').hidden=items.length>0}
+const wishlistKey = 'noir-wishlist';
+let wishlistOnly = false;
+
+function readWishlist() {
+  try {
+    const ids = JSON.parse(localStorage.getItem(wishlistKey));
+    return new Set(products.filter(p => Array.isArray(ids) && ids.includes(p.id)).map(p => p.id));
+  } catch {
+    return new Set();
+  }
+}
+
+let wishlist = readWishlist();
+
+function renderProducts() {
+  const term = $('#search').value.toLowerCase();
+  const items = products.filter(p =>
+    (category === 'All' || p.category === category) &&
+    (!wishlistOnly || wishlist.has(p.id)) &&
+    p.name.toLowerCase().includes(term)
+  );
+  const sort = $('#sort').value;
+  if (sort === 'low') items.sort((a, b) => a.price - b.price);
+  if (sort === 'high') items.sort((a, b) => b.price - a.price);
+
+  $('#products').innerHTML = items.map(p => `
+    <article class="product">
+      <div class="product-image">
+        <img src="${p.image}" alt="${escapeHTML(p.name)}" loading="lazy">
+        ${p.tag ? `<span class="tag">${p.tag}</span>` : ''}
+        <button class="heart" data-wish="${p.id}" aria-label="Save ${escapeHTML(p.name)} to wishlist" aria-pressed="${wishlist.has(p.id)}">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 20.5 3.6 12A5.4 5.4 0 0 1 12 5.3 5.4 5.4 0 0 1 20.4 12Z"/></svg>
+        </button>
+        <button class="add" data-add="${p.id}" aria-label="Add ${escapeHTML(p.name)} to bag">Add to bag +</button>
+      </div>
+      <div class="product-meta"><div><h3>${escapeHTML(p.name)}</h3><small>${p.category}</small></div><strong>${money(p.price)}</strong></div>
+    </article>`).join('');
+  $('#wishlistCount').textContent = wishlist.size;
+  $('#empty').hidden = items.length > 0;
+  $('#empty').textContent = wishlistOnly && wishlist.size === 0
+    ? 'Your wishlist is empty. Turn off Wishlist and select a heart to save a piece.'
+    : 'No products match your selection.';
+}
+
+$('#wishlistFilter').addEventListener('click', event => {
+  wishlistOnly = !wishlistOnly;
+  event.currentTarget.setAttribute('aria-pressed', wishlistOnly);
+  renderProducts();
+});
+
+$('#products').addEventListener('click', event => {
+  const button = event.target.closest('[data-wish]');
+  if (!button) return;
+  const id = Number(button.dataset.wish);
+  if (wishlist.has(id)) wishlist.delete(id);
+  else wishlist.add(id);
+  try {
+    localStorage.setItem(wishlistKey, JSON.stringify([...wishlist]));
+  } catch {
+    // Keep the current tab usable when storage is unavailable.
+  }
+  renderProducts();
+  const target = document.querySelector(`[data-wish="${id}"]`) || $('.heart') || $('#wishlistFilter');
+  target.focus({ preventScroll: true });
+});
+
+window.addEventListener('storage', event => {
+  if (event.key === wishlistKey || event.key === null) {
+    wishlist = readWishlist();
+    renderProducts();
+  }
+});
 function save(){localStorage.setItem('noir-cart',JSON.stringify(cart));renderCart()}
 function renderCart(){let entries=Object.entries(cart).filter(([id,q])=>q>0&&products.some(p=>p.id===Number(id)));let count=entries.reduce((s,[,q])=>s+q,0);$('#cartCount').textContent=`(${count})`;$('#drawerCount').textContent=`(${count})`;$('#cartItems').innerHTML=entries.length?entries.map(([id,q])=>{let p=products.find(x=>x.id===Number(id));return `<div class="cart-item"><img src="${p.image}" alt="${escapeHTML(p.name)}"><div><h3>${escapeHTML(p.name)}</h3><p>${money(p.price)}</p><div class="qty"><button data-qty="${id}" data-delta="-1" aria-label="Decrease ${escapeHTML(p.name)} quantity">−</button><span>${q}</span><button data-qty="${id}" data-delta="1" aria-label="Increase ${escapeHTML(p.name)} quantity">+</button></div></div></div>`}).join(''):'<p class="cart-empty">Your bag is empty.<br>Find something you love.</p>';$('#subtotal').textContent=money(entries.reduce((s,[id,q])=>s+products.find(p=>p.id===Number(id)).price*q,0));$('#checkout').disabled=!entries.length}
 function toggleCart(open){$('#cart').classList.toggle('open',open);$('#cart').setAttribute('aria-hidden',String(!open));$('#overlay').hidden=!open;document.body.style.overflow=open?'hidden':'';if(open)$('#cartClose').focus()}
