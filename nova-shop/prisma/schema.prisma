@@ -9,27 +9,78 @@ datasource db {
 }
 
 model Customer {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  name         String
+  id String @id @default(cuid())
+  email String @unique
+  name String
   passwordHash String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  sessions     Session[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions Session[]
+  orders Order[]
 }
-
 model Session {
-  digest     String    @id
+  digest String @id
   customerId String
-  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  expiresAt  DateTime
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
   @@index([customerId])
   @@index([expiresAt])
 }
-
 model AuthAttempt {
-  key       String   @id
-  count     Int
+  key String @id
+  count Int
   expiresAt DateTime
   @@index([expiresAt])
+}
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+model Order {
+  id String @id @default(cuid())
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  status OrderStatus @default(PENDING_PAYMENT)
+  currency String @default("INR")
+  subtotalPaise Int
+  shippingPaise Int @default(0)
+  totalPaise Int
+  shippingName String
+  shippingPhone String
+  addressLine1 String
+  addressLine2 String?
+  city String
+  state String
+  postalCode String
+  country String @default("IN")
+  razorpayOrderId String? @unique
+  razorpayPaymentId String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items OrderItem[]
+  paymentEvents PaymentEvent[]
+  @@index([customerId, createdAt])
+}
+model OrderItem {
+  id String @id @default(cuid())
+  orderId String
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  title String
+  quantity Int
+  unitPricePaise Int
+  lineTotalPaise Int
+}
+model PaymentEvent {
+  id String @id @default(cuid())
+  providerEventId String @unique
+  orderId String?
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  eventType String
+  createdAt DateTime @default(now())
 }
