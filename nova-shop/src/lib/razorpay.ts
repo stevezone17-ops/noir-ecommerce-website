@@ -14,7 +14,7 @@ export function verifyCheckoutSignature(orderId: string, paymentId: string, sign
   return safeEqualHex(signature, expected);
 }
 
-export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
+export function verifyWebhookSignature(rawBody: Buffer, signature: string): boolean {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret) throw new Error("Razorpay webhook secret is not configured");
   const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
@@ -33,10 +33,27 @@ export async function createRazorpayTestOrder(amountPaise: number, receipt: stri
       "Content-Type": "application/json"
     },
     body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt }),
-    cache: "no-store"
+    signal: AbortSignal.timeout(8000), cache: "no-store"
   });
   if (!response.ok) throw new Error("Razorpay order creation failed");
   const order: unknown = await response.json();
-  if (!order || typeof order !== "object" || !("id" in order) || typeof order.id !== "string") throw new Error("Invalid Razorpay response");
+  if (!order || typeof order !== "object" || !("id" in order) || typeof order.id !== "string" || !/^order_[A-Za-z0-9]+$/.test(order.id) ||
+      !("amount" in order) || order.amount !== amountPaise || !("currency" in order) || order.currency !== "INR") throw new Error("Invalid Razorpay response");
   return { orderId: order.id, publicKey: key };
+}
+
+export function testKey() {
+  const key = process.env.RAZORPAY_KEY_ID;
+  if (!key?.startsWith('rzp_test_') || !process.env.RAZORPAY_KEY_SECRET || !process.env.RAZORPAY_WEBHOOK_SECRET)
+    throw Error('Test payments are unavailable.');
+  return key;
+}
+
+export async function fetchTestPayment(id: string): Promise<unknown> {
+  const auth = Buffer.from(testKey() + ':' + process.env.RAZORPAY_KEY_SECRET).toString('base64');
+  const response = await fetch('https://api.razorpay.com/v1/payments/' + encodeURIComponent(id), {
+    headers: {Authorization:'Basic ' + auth}, cache:'no-store', signal:AbortSignal.timeout(8000)
+  });
+  if (!response.ok) throw Error('Payment lookup unavailable.');
+  return response.json();
 }
