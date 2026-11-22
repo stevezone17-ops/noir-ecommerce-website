@@ -50,6 +50,9 @@ model Order {
   subtotalPaise Int
   shippingPaise Int @default(0)
   totalPaise Int
+  shippingEmail String?
+  checkoutKey String?
+  @@unique([customerId, checkoutKey])
   shippingName String
   shippingPhone String
   addressLine1 String

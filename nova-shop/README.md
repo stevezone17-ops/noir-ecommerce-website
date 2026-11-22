@@ -27,4 +27,4 @@ Open http://localhost:3000. Run `npm run build` and `npm test` to compile and ty
 
 ## Important
 
-Customer accounts persist in PostgreSQL. Shopping and checkout are still a demo. Checkout does not process payments; newsletter signups are not submitted. Products are sample data in `script.js`, and product images and fonts require internet access. Wishlist and bag selections stay in the current browser. Before selling, integrate inventory, fulfillment, and payments.
+Customer accounts persist in PostgreSQL. Checkout supports Razorpay test payments (see [Phase 3](PHASE3.md)); newsletter signups are not submitted. Products are sample data in `public/catalog.js`, and product images and fonts require internet access. Wishlist and bag selections stay in the current browser. Before selling, integrate inventory, fulfillment, and payments.
