@@ -33,7 +33,7 @@ export async function currentSession() {
   if (!token) return null;
   return db.session.findFirst({
     where: { digest: digest(token), expiresAt: { gt: new Date() } },
-    include: { customer: { select: { id: true, email: true, name: true } } },
+    include: { customer: { select: { id: true, email: true, name: true, role: true } } },
   });
 }
 

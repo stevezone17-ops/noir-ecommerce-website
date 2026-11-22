@@ -1,5 +1,6 @@
 'use server';
 import { db, currentSession } from '../../../lib/customer';
+import {lockOrder,allocate} from '../../../lib/inventory';
 import { quote, address } from '../../../lib/checkout';
 import { ownedOrder, paymentEntity, recordPayment } from '../../../lib/payments';
 import { testKey, createRazorpayTestOrder, verifyCheckoutSignature, fetchTestPayment } from '../../../src/lib/razorpay';
@@ -18,6 +19,9 @@ export async function begin(cart: unknown, key: string, form: FormData) {
     const pricing=quote(cart,products);
     let order = await tx.order.findUnique({where:{customerId_checkoutKey:{customerId,checkoutKey:key}}, include:{items:true}});
     if (order) {
+      await lockOrder(tx,order.id);
+      order=await tx.order.findUniqueOrThrow({where:{id:order.id},include:{items:true}});
+      if(order.status==='PENDING_PAYMENT'&&!await allocate(tx,order.id))throw Error('Stock unavailable');
       const saved = order;
       if (Object.entries(shipping).some(([k,v]) => saved[k as keyof typeof shipping] !== v) ||
           pricing.items.length !== saved.items.length || pricing.items.some(i => !saved.items.some(j => j.productId === i.productId && j.quantity === i.quantity)))
@@ -53,4 +57,16 @@ export async function confirm(id: string, paymentId: string, signature: string) 
   if (!p || p.orderId !== order.razorpayOrderId || p.id !== paymentId || !p.captured || p.status !== 'captured' || p.amount !== order.totalPaise) return false;
   await db.$transaction(tx => recordPayment(tx,p));
   return true;
+}
+
+export async function resume(id:string){
+  const session=await currentSession();
+  if(!session||typeof id!=='string'||id.length>80)throw Error('Invalid order.');
+  return db.$transaction(async tx=>{
+    const owned=await tx.order.findFirstOrThrow({where:{id,customerId:session.customerId},select:{id:true}});
+    await lockOrder(tx,owned.id);
+    const order=await tx.order.findUniqueOrThrow({where:{id}});
+    if(order.status==='PENDING_PAYMENT'&&!await allocate(tx,id))throw Error('Stock unavailable.');
+    return {id,finished:order.status!=='PENDING_PAYMENT',gateway:order.razorpayOrderId??'',publicKey:testKey(),total:order.totalPaise};
+  });
 }

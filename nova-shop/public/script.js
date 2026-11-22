@@ -4,6 +4,12 @@ const products = (await response.json()).map(p=>({...p,price:p.pricePaise/100}))
 const variants = new Map(products.flatMap(p=>p.variants.map((v,i)=>[i ? p.id+':'+v.id : String(p.id), {...p,variant:v}])));
 
 const money=n=>'₹'+n.toLocaleString('en-IN');let category='All';let cart;try{cart=JSON.parse(localStorage.getItem('noir-cart'))||{}}catch{cart={}};const $=s=>document.querySelector(s);const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Drop discontinued entries when a successfully loaded catalog can no longer fulfill them.
+if (!cart || typeof cart!=='object' || Array.isArray(cart)) cart={};
+for(const [key,qty] of Object.entries(cart)){
+  if(!variants.has(key)||!Number.isInteger(qty)||qty<1) delete cart[key];
+}
+try{localStorage.setItem('noir-cart',JSON.stringify(cart));}catch{}
 const wishlistKey = 'noir-wishlist';
 let wishlistOnly = false;
 

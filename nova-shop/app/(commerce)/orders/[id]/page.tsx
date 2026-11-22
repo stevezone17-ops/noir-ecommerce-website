@@ -11,7 +11,10 @@ async function cancel(id:string) {
   await db.$transaction(async tx=>{
     await lockOrder(tx,id);
     const changed=await tx.order.updateMany({where:{id,customerId:session.customerId,status:'PENDING_PAYMENT'},data:{status:'CANCELLED'}});
-    if(changed.count)await release(tx,id);
+    if(changed.count){
+      await release(tx,id);
+      await tx.audit.create({data:{actor:session.customerId,action:'Order cancelled',target:id,detail:'Customer cancelled unpaid order'}});
+    }
   });
   redirect('/orders/'+encodeURIComponent(id));
 }
