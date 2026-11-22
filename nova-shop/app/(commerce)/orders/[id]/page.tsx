@@ -1,3 +1,4 @@
+import {lockOrder,release} from '../../../../lib/inventory';
 import {notFound,redirect} from 'next/navigation';
 import {currentSession,db} from '../../../../lib/customer';
 import {labels,money} from '../../../../lib/checkout';
@@ -7,7 +8,14 @@ async function cancel(id:string) {
   'use server';
   const session = await currentSession();
   if (!session) redirect('/account');
-  await db.order.updateMany({where:{id,customerId:session.customerId,status:'PENDING_PAYMENT'},data:{status:'CANCELLED'}});
+  await db.$transaction(async tx=>{
+    await lockOrder(tx,id);
+    const changed=await tx.order.updateMany({where:{id,customerId:session.customerId,status:'PENDING_PAYMENT'},data:{status:'CANCELLED'}});
+    if(changed.count){
+      await release(tx,id);
+      await tx.audit.create({data:{actor:session.customerId,action:'Order cancelled',target:id,detail:'Customer cancelled unpaid order'}});
+    }
+  });
   redirect('/orders/'+encodeURIComponent(id));
 }
 
@@ -23,7 +31,7 @@ export default async function Details({params}:{params:Promise<{id:string}>}) {
     <p>{labels[o.status]} · {o.status==='REFUNDED'?'Refunded':o.razorpayPaymentId?'Paid':o.paymentEvents.length?'Payment failed':'Unpaid'}</p>
     <div className="checkout-grid"><section><h2>Items</h2>{o.items.map(i=><p className="line" key={i.id}><span>{i.title} × {i.quantity} at {money(i.unitPricePaise)}</span><strong>{money(i.lineTotalPaise)}</strong></p>)}
     <p>Subtotal {money(o.subtotalPaise)} · Shipping {money(o.shippingPaise)}</p><p className="total">Total {money(o.totalPaise)}</p></section>
-    <aside><h2>Ship to</h2><p>{o.shippingName}<br/>{o.addressLine1}<br/>{o.city}, {o.state} {o.postalCode}<br/>{o.country}</p><p>{o.shippingPhone}<br/>{o.shippingEmail}</p></aside></div>
+    <aside>{o.tracking && <p>Tracking: {o.tracking}</p>}<h2>Ship to</h2><p>{o.shippingName}<br/>{o.addressLine1}<br/>{o.city}, {o.state} {o.postalCode}<br/>{o.country}</p><p>{o.shippingPhone}<br/>{o.shippingEmail}</p></aside></div>
     <Controls settled={!!o.razorpayPaymentId} cancelled={o.status==='CANCELLED'} order={{id:o.id,gateway:o.razorpayOrderId || '',total:o.totalPaise,publicKey:publicKey?.startsWith('rzp_test_')?publicKey:'',finished:!pending}}/>
     {pending && <><p>If you just paid, refresh this page to check confirmation.</p><form action={cancel.bind(null,id)}><button className="secondary">Cancel unpaid order</button></form></>}</>;
 }

@@ -16,7 +16,7 @@ export default async function Account({ searchParams }: { searchParams: Promise<
   return <><header><a href="/" aria-label="NOIR home">NOIR.</a><a href="/#shop">Back to shop ↗</a></header><main>
     <h1>Your account</h1>
     {message && Object.hasOwn(messages, message) && <p role="status">{messages[message]}</p>}
-    {session ? <section><p><a href="/orders">Order history</a> · <a href="/checkout">Continue to checkout</a></p><h2>Profile</h2><p>{session.customer.email}</p>
+    {session ? <section><p>{session.customer.role==='ADMIN'&&<><a href="/admin">Administration</a> · </>}<a href="/orders">Order history</a> · <a href="/checkout">Continue to checkout</a></p><h2>Profile</h2><p>{session.customer.email}</p>
       <form action={updateProfile}><label>Name<input name="name" autoComplete="name" maxLength={100} defaultValue={session.customer.name} required /></label><button>Save changes</button></form>
       <form action={logout}><button className="secondary">Sign out</button></form>
     </section> : <div className="columns">{['login', 'signup'].map(mode => {
