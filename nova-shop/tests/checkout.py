@@ -40,6 +40,9 @@ with sync_playwright() as pw:
     expect(p).to_have_url(BASE+'/account')
     signup(p)
     p.goto(BASE)
+    def available():
+        return next(x for x in p.request.get(BASE+'/api/catalog').json() if x['id']==1)['variants'][0]['stock']
+    initial_stock=available()
     p.click('[data-add="1"]')
     p.click('#checkout')
     expect(p.get_by_role('heading',name='Checkout')).to_be_visible()
@@ -56,6 +59,7 @@ with sync_playwright() as pw:
     pay_button.click()
     p.wait_for_function('window.gateway?.order_id')
     gateway = p.evaluate('window.gateway.order_id')
+    assert available()==initial_stock-1
     p.evaluate('window.gateway.modal.ondismiss()')
     expect(p.get_by_text('Pending · Unpaid')).to_be_visible()
     details = p.url
@@ -74,6 +78,7 @@ with sync_playwright() as pw:
     assert event(p,gateway,'payment.failed',secrets.token_hex(8))==204
     p.reload()
     expect(p.get_by_text('Pending · Payment failed')).to_be_visible()
+    assert available()==initial_stock
     p.get_by_role('button',name='Resume test payment').click()
     p.wait_for_function('window.gateway?.order_id')
     signature = sign(gateway_secret,gateway+'|'+payment_id)
@@ -104,6 +109,7 @@ with sync_playwright() as pw:
     expect(p.get_by_text('Pending · Unpaid')).to_be_visible()
     p.get_by_role('button',name='Cancel unpaid order').click()
     expect(p.get_by_text('Cancelled · Unpaid')).to_be_visible()
+    assert available()==initial_stock-1
     # A late verified capture still needs reconciliation after checkout dismissal/cancellation.
     assert event(p,second,'payment.captured',secrets.token_hex(8),amount=1) != 204
     p.reload()
@@ -111,5 +117,6 @@ with sync_playwright() as pw:
     assert event(p,second,'payment.captured',secrets.token_hex(8))==204
     p.reload()
     expect(p.get_by_text('Confirmed · Paid')).to_be_visible()
+    assert available()==initial_stock-2
     browser.close()
     print('Checkout, layout, retry, callback verification, failed payment, webhook replay and ownership passed.')

@@ -7,3 +7,7 @@ Migration preserves product IDs 1–8. Enter actual available quantities before 
 Disable “Available in catalog” to archive a product. Upload JPEG, PNG or WebP images up to 800 KB; the server decodes and re-encodes them. A supplier assignment and cost apply to new purchases and are snapshotted with the item. Supplier requests and shipment tracking are recorded manually. No customer details are sent to suppliers.
 
 The overview flags variants with five available units or fewer. Revenue includes shipping on verified non-refunded test orders. Product margin uses recorded purchase-time costs. Historical orders without known supplier costs remain outside the margin estimate.
+
+## Regression checks
+
+On a disposable migrated database, add at least two test units of the original linen shirt before running the Phase 3 checkout suite. Start the production build with the test gateway as described in PHASE3.md. With the same fixture environment and NOIR_TEST_URL pointing at the local server, run `python tests/checkout.py` and `python tests/admin.py` from nova-shop. The admin test creates its own customer, elevates it using the bootstrap CLI, and creates its own supplier, product and inventory.

@@ -6,7 +6,7 @@ The shopping bag leads to /checkout. Sign in before placing an order. Shipping w
 
 A checkout retry with the same account, details, and browser checkout key reuses the gateway order. Payment dismissal leaves an unpaid order available to resume or cancel. An invalid callback cannot confirm an order. A correctly signed callback still requires a gateway lookup showing an exact INR capture. The signed webhook can confirm independently. A late capture takes precedence over local cancellation. Failed attempts are recorded without overwriting a confirmed payment.
 
-For fulfillment, a trusted operator with database access runs `node --env-file=.env scripts/fulfillment.mjs ORDER_ID PROCESSING` and then advances to SHIPPED and DELIVERED in sequence. Use the database ID after the NOIR- prefix. Customer-facing pages cannot advance fulfillment.
+For fulfillment, a trusted operator with database access runs `node --env-file=.env scripts/fulfillment.mjs ORDER_ID PROCESSING` and then advances to SHIPPED (supply a tracking number as the final argument) and DELIVERED in sequence. The [admin dashboard](ADMIN.md) also supports these transitions. Use the database ID after the NOIR- prefix. Customer-facing pages cannot advance fulfillment.
 
 ## Integration checks
 
