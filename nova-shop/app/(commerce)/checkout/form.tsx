@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
-import {quote,money} from '../../../lib/checkout';
+import {quote,money,type CatalogRow} from '../../../lib/checkout';
 import {begin} from './actions';
 import {usePayment} from './widget';
 
@@ -10,7 +10,7 @@ const fields = [
   ['city','City','address-level2'],['state','State or union territory','address-level1'],['postalCode','PIN code','postal-code']
 ] as const;
 
-export default function Checkout({customer}:{customer:{id:string;name:string;email:string}}) {
+export default function Checkout({customer,products}:{products:CatalogRow[];customer:{id:string;name:string;email:string}}) {
   const [cart,setCart] = useState<Record<string,number>>({});
   const [ready,setReady] = useState(false);
   const payment = usePayment();
@@ -19,7 +19,7 @@ export default function Checkout({customer}:{customer:{id:string;name:string;ema
     setReady(true);
   },[]);
   let summary;
-  try {summary = quote(cart);} catch {}
+  try {summary = quote(cart,products);} catch {}
   if (!summary) return <><h1>Checkout</h1><p>{ready?'Your bag is empty or needs updating.':'Loading your bag…'}</p><a href="/#shop">Return to the collection</a></>;
   return <>{payment.script}<a href="/#shop">← Collection</a><h1>Checkout</h1><div className="checkout-grid">
     <section><h2>Shipping address</h2><form onSubmit={event=>{
