@@ -9,3 +9,4 @@
 .line strong {white-space:nowrap;}
 .total {border-top:1px solid #aaa;padding-top:16px;}
 @media(max-width:680px){.checkout-grid{grid-template-columns:minmax(0,1fr)}.checkout-grid aside{grid-row:1}}
+.timeline{border-left:1px solid #b6b3a8;margin-left:8px;padding:0 0 0 24px}.timeline li{padding:8px 0}.commerce>section{margin:18px 0}.commerce>section a{text-underline-offset:4px}

@@ -1,4 +1,5 @@
-import { currentSession } from '../../lib/customer';
+import { money,labels } from "../../lib/checkout";
+import { currentSession,db } from '../../lib/customer';
 import { authenticate, logout, updateProfile } from './actions';
 import './style.css';
 
@@ -12,11 +13,12 @@ const messages: Record<string, string> = {
 };
 export default async function Account({ searchParams }: { searchParams: Promise<{ message?: string }> }) {
   const session = await currentSession();
+  const recent=session?await db.order.findFirst({where:{customerId:session.customerId},orderBy:{createdAt:"desc"},select:{id:true,status:true,totalPaise:true}}):null;
   const { message } = await searchParams;
   return <><header><a href="/" aria-label="NOIR home">NOIR.</a><a href="/#shop">Back to shop ↗</a></header><main>
     <h1>Your account</h1>
     {message && Object.hasOwn(messages, message) && <p role="status">{messages[message]}</p>}
-    {session ? <section><p>{session.customer.role==='ADMIN'&&<><a href="/admin">Administration</a> · </>}<a href="/orders">Order history</a> · <a href="/checkout">Continue to checkout</a></p><h2>Profile</h2><p>{session.customer.email}</p>
+    {session ? <section><h2>Welcome, {session.customer.name}</h2>{recent&&<p>Latest order · <a href={'/orders/'+recent.id}>{labels[recent.status]} · {money(recent.totalPaise)}</a></p>}<p><a href="/?edit=Wishlist#shop">Wishlist</a> · {session.customer.role==='ADMIN'&&<><a href="/admin">Administration</a> · </>}<a href="/orders">Order history</a> · <a href="/checkout">Continue to checkout</a></p><h2>Profile</h2><p>{session.customer.email}</p>
       <form action={updateProfile}><label>Name<input name="name" autoComplete="name" maxLength={100} defaultValue={session.customer.name} required /></label><button>Save changes</button></form>
       <form action={logout}><button className="secondary">Sign out</button></form>
     </section> : <div className="columns">{['login', 'signup'].map(mode => {

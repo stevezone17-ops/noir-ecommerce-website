@@ -28,3 +28,7 @@ Open http://localhost:3000. Run `npm run build` and `npm test` to compile and ty
 ## Important
 
 Customer accounts persist in PostgreSQL. Checkout supports Razorpay test payments (see [Phase 3](PHASE3.md)); newsletter signups are not submitted. Products, variants and available stock are stored in PostgreSQL. See [Store administration](ADMIN.md) for operator setup and manual fulfillment. Original product photos and fonts require internet access. Wishlist and bag selections stay in the current browser. Razorpay is restricted to test mode.
+
+## Storefront deployment
+
+Serve the Next.js application at the root URL and apply the migrations to its configured PostgreSQL database. Serving only the public directory cannot run the catalog or checkout. Set SITE_URL to the public HTTPS origin for canonical Open Graph images and the sitemap. The Phase 4 migration creates the original eight products once; no runtime seed or production reset is required. Zero-stock products stay visible. Enter verified stock in the admin, and set the collection audience and additional image there. For original single-photo products the second gallery view is a labeled detail crop. The newsletter form records opt-ins in PostgreSQL; mail delivery is outside the storefront.
