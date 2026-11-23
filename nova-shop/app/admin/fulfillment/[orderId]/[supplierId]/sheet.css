@@ -1,0 +1,10 @@
+@media print {
+  .studio > header,
+  .studio > nav,
+  .supplier-sheet .screen-only {
+    display: none;
+  }
+  .studio {
+    background: white;
+  }
+}

@@ -34,6 +34,9 @@ export default async function Details({params}:{params:Promise<{id:string}>}) {
     <p>Subtotal {money(o.subtotalPaise)} · Shipping {money(o.shippingPaise)}</p><p className="total">Total {money(o.totalPaise)}</p></section>
     <aside>{o.tracking && <p>Tracking: {o.tracking}</p>}<h2>Ship to</h2><p>{o.shippingName}<br/>{o.addressLine1}<br/>{o.city}, {o.state} {o.postalCode}<br/>{o.country}</p><p>{o.shippingPhone}<br/>{o.shippingEmail}</p></aside></div>
     <section><h2>Order timeline</h2><ol className="timeline"><li>Order placed · {o.createdAt.toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'})}</li>{o.paidAt&&<li>Payment confirmed · {o.paidAt.toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'})}</li>}{history.map((event,i)=><li key={i}>{event.action==='Order cancelled'?'Order cancelled':event.detail.split(' · ')[0]} · {event.createdAt.toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'})}</li>)}</ol></section>
+    {o.items.some(item=>item.supplierTracking)&&<section><h2>Package tracking</h2><ul>
+      {o.items.filter(item=>item.supplierTracking).map(item=><li key={item.id}>{item.title} · {item.supplierTracking}</li>)}
+    </ul></section>}
     <Controls settled={!!o.razorpayPaymentId} cancelled={o.status==='CANCELLED'} order={{id:o.id,gateway:o.razorpayOrderId || '',total:o.totalPaise,publicKey:publicKey?.startsWith('rzp_test_')?publicKey:'',finished:!pending}}/>
     {pending && <><p>If you just paid, refresh this page to check confirmation.</p><form action={cancel.bind(null,id)}><button className="secondary">Cancel unpaid order</button></form></>}</>;
 }

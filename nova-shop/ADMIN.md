@@ -11,3 +11,13 @@ The overview flags variants with five available units or fewer. Revenue includes
 ## Regression checks
 
 On a disposable migrated database, add at least two test units of the original linen shirt before running the Phase 3 checkout suite. Start the production build with the test gateway as described in PHASE3.md. With the same fixture environment and NOIR_TEST_URL pointing at the local server, run `python tests/checkout.py` and `python tests/admin.py` from nova-shop. The admin test creates its own customer, elevates it using the bootstrap CLI, and creates its own supplier, product and inventory.
+
+## Place a dropship order
+
+1. Under Suppliers, add your supplier's contact details. In Products & stock, assign the supplier and unit cost, then enter the actual available units for each option.
+2. Open **Supplier fulfillment** after a verified payment. Check the order for any stock holds or unassigned items.
+3. Open the sheet for each supplier. Use your browser's Print menu to save it as a PDF if needed. Place the order through your supplier's agreed channel, using only that supplier's sheet.
+4. In Orders, mark each item Requested when the supplier order has been placed. Add tracking when marking an item Dispatched. Customers can see individual package tracking in their order details.
+5. Advance the overall order in Orders once the corresponding fulfillment milestones have been reached for all items.
+
+Supplier assignments are saved when the customer places the order. Changing the product's supplier applies to future orders.

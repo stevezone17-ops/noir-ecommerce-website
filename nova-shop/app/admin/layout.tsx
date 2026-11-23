@@ -15,6 +15,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
           ["", "Overview"],
           ["products", "Products & stock"],
           ["orders", "Orders"],
+          ["fulfillment", "Supplier fulfillment"],
           ["suppliers", "Suppliers"],
           ["analytics", "Analytics"],
         ].map(([url, label]) => (

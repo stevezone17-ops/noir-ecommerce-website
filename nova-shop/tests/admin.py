@@ -97,6 +97,15 @@ with sync_playwright() as pw:
     signature=hmac.new(os.environ['RAZORPAY_WEBHOOK_SECRET'].encode(),payload.encode(),hashlib.sha256).hexdigest()
     assert p.request.post(base+'/api/razorpay/webhook',data=payload,headers={'x-razorpay-signature':signature,'x-razorpay-event-id':secrets.token_hex(12)}).status==204
     order_id=gateway.removeprefix('order_')
+    p.goto(base+'/admin/fulfillment')
+    sheet=p.locator('section').filter(has_text='NOIR-'+order_id).get_by_role('link',name='fulfillment sheet',exact=False)
+    sheet_url=sheet.get_attribute('href')
+    sheet.click()
+    expect(p.get_by_role('heading', name='Supplier fulfillment sheet')).to_be_visible()
+    expect(p.get_by_text('Mumbai',exact=False)).to_be_visible()
+    outsider=browser.new_page()
+    assert outsider.goto(base+sheet_url).status==404
+    outsider.close()
     p.goto(base+'/admin/orders?q='+order_id)
     row=p.locator('details').filter(has=p.locator('summary',has_text='Confirmed')).first
     number=row.locator('summary').inner_text().split(' · ')[0]
