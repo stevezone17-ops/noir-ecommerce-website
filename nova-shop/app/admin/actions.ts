@@ -40,6 +40,26 @@ function log(
 function refresh() {
   revalidatePath("/admin", "layout");
 }
+async function decoded(image:FormDataEntryValue|null){
+  let photo: Uint8Array<ArrayBuffer> | undefined;
+  if (image instanceof File && image.size) {
+    if (image.size > 800000) throw Error("Image exceeds 800 KB");
+    const decoder = sharp(Buffer.from(await image.arrayBuffer()), {
+      limitInputPixels: 16000000,
+    });
+    const meta = await decoder.metadata();
+    if (!["jpeg", "png", "webp"].includes(meta.format ?? ""))
+      throw Error("Unsupported image");
+    photo = new Uint8Array(
+      await decoder
+        .rotate()
+        .resize(1200, 1500, { fit: "inside", withoutEnlargement: true })
+        .webp()
+        .toBuffer(),
+    );
+  }
+  return photo;
+}
 export async function product(f: FormData) {
   const actor = await requireAdmin();
   const id = integer(f, "id", 0),
@@ -59,30 +79,16 @@ export async function product(f: FormData) {
     supplierId,
     active: f.get("active") === "on",
   };
-  const image = f.get("image");
-  let photo: Uint8Array<ArrayBuffer> | undefined;
-  if (image instanceof File && image.size) {
-    if (image.size > 800000) throw Error("Image exceeds 800 KB");
-    const decoder = sharp(Buffer.from(await image.arrayBuffer()), {
-      limitInputPixels: 16000000,
-    });
-    const meta = await decoder.metadata();
-    if (!["jpeg", "png", "webp"].includes(meta.format ?? ""))
-      throw Error("Unsupported image");
-    photo = new Uint8Array(
-      await decoder
-        .rotate()
-        .resize(1200, 1500, { fit: "inside", withoutEnlargement: true })
-        .webp()
-        .toBuffer(),
-    );
-  }
+  const photo=await decoded(f.get('image'));
+  const detailPhoto=await decoded(f.get('detailPhoto'));
+  const audience=field(f,'audience',12);
+  if(!['Men','Women','Unisex'].includes(audience))throw Error('Invalid collection');
   await db.$transaction(async (tx) => {
     const p = id
-      ? await tx.product.update({ where: { id }, data })
+      ? await tx.product.update({ where: { id }, data:{...data,audience,detailPhoto} })
       : await tx.product.create({
           data: {
-            ...data,
+            ...data,audience,detailPhoto,
             variants: { create: { size: "Standard", color: "Original" } },
           },
         });

@@ -1,5 +1,6 @@
+import { cache } from "react";
 import { db } from "./customer";
-export async function catalog() {
+export const catalog = cache(async function catalog() {
   return db.product.findMany({
     where: { active: true },
     orderBy: { id: "asc" },
@@ -8,6 +9,7 @@ export async function catalog() {
       name: true,
       description: true,
       category: true,
+      audience: true,
       tag: true,
       pricePaise: true,
       image: true,
@@ -17,4 +19,4 @@ export async function catalog() {
       },
     },
   });
-}
+});

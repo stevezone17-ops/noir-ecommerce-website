@@ -1,9 +1,7 @@
 import type { NextConfig } from 'next';
 
 const config: NextConfig = {
-  async rewrites() {
-    return [{ source: '/', destination: '/index.html' }];
-  },
+  experimental: { serverActions: { bodySizeLimit: '2mb' } },
   poweredByHeader: false,
 };
 export default config;

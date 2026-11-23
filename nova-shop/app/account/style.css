@@ -14,3 +14,4 @@ input, button { font: inherit; padding: 12px; border: 1px solid #aaa; }
 button { background: #191919; color: white; border-color: #191919; cursor: pointer; }
 .secondary { background: white; color: #191919; }
 @media (max-width: 600px) { .columns { grid-template-columns: 1fr; gap: 24px; } }
+body{background:#faf9f6;color:#20201e}header{background:#faf9f6}main>section,.columns>section{background:#fff;padding:clamp(18px,3vw,36px);border:1px solid #d7d4cb}input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #805a39;outline-offset:3px}main a{color:inherit;text-underline-offset:4px}
