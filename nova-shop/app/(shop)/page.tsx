@@ -18,17 +18,19 @@ export default async function Home({
 }) {
   const params = await searchParams,
     products = await catalog();
-  const ranking = await db.orderItem.groupBy({
-    by: ["productId"],
+  const ranking = await db.orderItem.findMany({
     where: {
       order: { razorpayPaymentId: { not: null }, status: { not: "REFUNDED" } },
     },
-    _sum: { quantity: true },
+    select: {
+      productId: true,
+      quantity: true,
+    },
   });
   const sales = new Map<number, number>();
   for (const r of ranking) {
     const id = Number(r.productId.split(":")[0]);
-    sales.set(id, (sales.get(id) || 0) + (r._sum.quantity || 0));
+    sales.set(id, (sales.get(id) || 0) + r.quantity);
   }
   const trending = products
     .filter((p) => sales.has(p.id))
