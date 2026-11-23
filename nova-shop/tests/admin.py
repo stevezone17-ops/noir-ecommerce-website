@@ -45,7 +45,7 @@ with sync_playwright() as pw:
     form.locator('select[name=supplier]').select_option(label='Fixture supplier')
     form.get_by_label('Unit cost').fill('750')
     import base64
-    form.locator('input[type=file]').set_input_files({'name':'fixture.png','mimeType':'image/png','buffer':base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8//8/AwMDEwMDAwMDAwAkBgMB/DXemwAAAABJRU5ErkJggg==')})
+    form.locator('input[name=image]').set_input_files({'name':'fixture.png','mimeType':'image/png','buffer':base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8//8/AwMDEwMDAwMDAwAkBgMB/DXemwAAAABJRU5ErkJggg==')})
     form.get_by_role('button',name='Save product').click()
     row=p.locator('details').filter(has=p.locator('summary',has_text=name))
     expect(row.locator('summary')).to_be_visible()

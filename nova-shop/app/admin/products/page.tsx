@@ -5,7 +5,7 @@ export default async function Products() {
   await requireAdmin();
   const [products, suppliers] = await Promise.all([
     db.product.findMany({
-      omit: { photo: true },
+      omit: { photo: true,detailPhoto:true },
       include: { variants: { orderBy: { id: "asc" } } },
       orderBy: { id: "asc" },
     }),
@@ -75,6 +75,8 @@ export default async function Products() {
           />
           Available in catalog
         </label>
+        <label>Collection<select name="audience" defaultValue={p?.audience??'Unisex'}>{['Unisex','Men','Women'].map(v=><option key={v}>{v}</option>)}</select></label>
+        <label>Additional product image<input type="file" name="detailPhoto" accept="image/jpeg,image/png,image/webp"/></label>
         <button>Save product</button>
       </form>
     );

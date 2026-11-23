@@ -106,6 +106,8 @@ enum Role {
   ADMIN
 }
 model Product {
+  audience String @default("Unisex")
+  detailPhoto Bytes?
   id Int @id @default(autoincrement())
   name String
   category String
@@ -148,4 +150,9 @@ model Audit {
   detail String
   createdAt DateTime @default(now())
   @@index([target,id])
+}
+
+model Subscriber {
+  email String @id
+  createdAt DateTime @default(now())
 }
