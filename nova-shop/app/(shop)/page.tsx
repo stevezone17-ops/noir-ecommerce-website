@@ -44,6 +44,8 @@ export default async function Home({
             <img
               className="campaign-image"
               src="/editorial/menswear.webp"
+              srcSet="/editorial/menswear.webp 850w, /editorial/menswear-1600.webp 1600w, /editorial/menswear-2560.webp 2560w, /editorial/menswear-3376.webp 3376w"
+              sizes="100vw"
               alt="Menswear editorial against sculptural architecture"
               fetchPriority="high"
             />
