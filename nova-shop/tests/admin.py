@@ -46,11 +46,13 @@ with sync_playwright() as pw:
     form.get_by_label('Unit cost').fill('750')
     import base64
     form.locator('input[name=image]').set_input_files({'name':'fixture.png','mimeType':'image/png','buffer':base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8//8/AwMDEwMDAwMDAwAkBgMB/DXemwAAAABJRU5ErkJggg==')})
+    form.locator('input[name=detailPhoto]').set_input_files({'name':'fixture.png','mimeType':'image/png','buffer':base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8//8/AwMDEwMDAwMDAwAkBgMB/DXemwAAAABJRU5ErkJggg==')})
     form.get_by_role('button',name='Save product').click()
     row=p.locator('details').filter(has=p.locator('summary',has_text=name))
     expect(row.locator('summary')).to_be_visible()
     entry=next(x for x in p.request.get(base+'/api/catalog').json() if x['name']==name)
     assert p.request.get(base+entry['image']).headers['content-type']=='image/webp'
+    assert p.request.get(base+'/products-media/'+str(entry['id'])).headers['content-type']=='image/webp'
     row.locator('summary').click()
     row.get_by_label('Description').fill('Updated fixture description')
     row.get_by_role('button',name='Save product').click()

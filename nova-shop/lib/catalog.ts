@@ -1,6 +1,6 @@
-import {cache} from 'react';
+import { cache } from "react";
 import { db } from "./customer";
-export const catalog=cache(async function catalog() {
+export const catalog = cache(async function catalog() {
   return db.product.findMany({
     where: { active: true },
     orderBy: { id: "asc" },
