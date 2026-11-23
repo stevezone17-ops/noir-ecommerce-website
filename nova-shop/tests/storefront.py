@@ -7,6 +7,11 @@ with sync_playwright() as pw:
     p=browser.new_page()
     records=p.request.get(base+'/api/catalog').json()
     assert set(range(1,9)) <= {r['id'] for r in records}
+    # Regression check: verify homepage loads catalog and trending sections without error boundary
+    p.goto(base+'/')
+    expect(p.get_by_text('The collection is temporarily unavailable.')).to_have_count(0)
+    expect(p.locator('.campaign-copy h1')).to_be_visible()
+    expect(p.locator('.tiles').first).to_be_visible()
     p.goto(base+'/?edit=New#shop')
     catalog=p.locator('#shop')
     search=catalog.get_by_label('Search',exact=True)

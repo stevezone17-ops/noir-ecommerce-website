@@ -18,17 +18,19 @@ export default async function Home({
 }) {
   const params = await searchParams,
     products = await catalog();
-  const ranking = await db.orderItem.groupBy({
-    by: ["productId"],
+  const ranking = await db.orderItem.findMany({
     where: {
       order: { razorpayPaymentId: { not: null }, status: { not: "REFUNDED" } },
     },
-    _sum: { quantity: true },
+    select: {
+      productId: true,
+      quantity: true,
+    },
   });
   const sales = new Map<number, number>();
   for (const r of ranking) {
     const id = Number(r.productId.split(":")[0]);
-    sales.set(id, (sales.get(id) || 0) + (r._sum.quantity || 0));
+    sales.set(id, (sales.get(id) || 0) + r.quantity);
   }
   const trending = products
     .filter((p) => sales.has(p.id))
@@ -42,6 +44,8 @@ export default async function Home({
             <img
               className="campaign-image"
               src="/editorial/menswear.webp"
+              srcSet="/editorial/menswear.webp 850w, /editorial/menswear-1600.webp 1600w, /editorial/menswear-2560.webp 2560w, /editorial/menswear-3376.webp 3376w"
+              sizes="100vw"
               alt="Menswear editorial against sculptural architecture"
               fetchPriority="high"
             />
